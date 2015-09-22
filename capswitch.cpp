@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <cassert>
+#include <ctime>
 #include <stack>
 #include <windows.h>
 
@@ -66,27 +67,21 @@ int is_window_minimizable(HWND hwnd) {
     return 1;
 }
 
-/*
-HWND get_next_window() {
-    static HWND hwnd_next;
-    hwnd_next = NULL;
+void set_title_info(HWND hwnd) {
+    char buf[2048];
+    int n = 0;
 
-    auto callback = [](HWND hwnd, LPARAM lParam) {
-        if(!is_window_minimizable(hwnd))
-            return TRUE;
-        hwnd_next = hwnd;
-        char buf[128];
-        int n = sprintf(buf, "%08X ", hwnd);
-        GetWindowText(hwnd, buf+n, 128-n);
-        MessageBox(NULL, buf, 0, 0);
-        return FALSE;
-    };
+    time_t now = time(NULL);
+    tm* local_now = localtime(&now);
+    n += sprintf(buf, "%02d:%02d:%02d", local_now->tm_hour, local_now->tm_min, local_now->tm_sec);
+    n += sprintf(buf + n, " @ ");
 
-    EnumDesktopWindows(GetThreadDesktop(GetCurrentThreadId()), callback, 0);
+    n += GetClassName(hwnd, buf + n, 128);
 
-    return hwnd_next;
+    buf[n] = '\0';
+
+    SetWindowText(g_mainwnd, buf);
 }
-*/
 
 void capital_handler(bool shift, HWND hForeground = NULL, bool minimize = true) {
     if (!shift) {
@@ -123,6 +118,9 @@ void capital_handler(bool shift, HWND hForeground = NULL, bool minimize = true) 
         } else {
             debug_out(("not minimizable\n"));
         }
+
+        // set title info
+        set_title_info(hForeground);
     }
     else {
         debug_out(("captital handler: shift = true\n"));
