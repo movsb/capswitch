@@ -148,11 +148,18 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
         if (wParam == WM_KEYUP || wParam == WM_KEYDOWN) {
             KBDLLHOOKSTRUCT* pKbd = reinterpret_cast<KBDLLHOOKSTRUCT*>(lParam);
             if (pKbd->vkCode == VK_CAPITAL) {
-                if (wParam == WM_KEYUP) {
-                    bool shift = ((unsigned short)GetAsyncKeyState(VK_LSHIFT) & 0x8000)
-                        || ((unsigned short)GetAsyncKeyState(VK_RSHIFT) & 0x8000);
-                    debug_out(("KeyboardHook: shift: %d\n", shift));
-                    capital_handler(shift);
+                static bool bReleased = true;
+                if (wParam == WM_KEYDOWN) {
+                    if(bReleased) {
+                        bool shift = ((unsigned short)GetAsyncKeyState(VK_LSHIFT) & 0x8000)
+                            || ((unsigned short)GetAsyncKeyState(VK_RSHIFT) & 0x8000);
+                        debug_out(("KeyboardHook: shift: %d\n", shift));
+                        capital_handler(shift);
+                        bReleased = false;
+                    }
+                }
+                else {
+                    bReleased = true;
                 }
                 return 1;
             }
